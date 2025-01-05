@@ -178,6 +178,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Клик по кнопке
     document.getElementById('clickerButton').addEventListener('click', handleClick);
     
+    // Клик по аватару для открытия настроек
+    document.getElementById('userAvatar').addEventListener('click', toggleSettings);
+    
+    // Загружаем сохраненные настройки
+    loadSettings();
+    
     // Навигация
     document.querySelectorAll('.nav-item').forEach(item => {
         item.addEventListener('click', (e) => {
@@ -186,6 +192,104 @@ document.addEventListener('DOMContentLoaded', () => {
             switchSection(section);
         });
     });
+    
+    // Запускаем снег сразу после загрузки страницы
+    snowfall.start();
+});
+
+// Функции для работы с настройками
+function toggleSettings() {
+    const overlay = document.getElementById('settingsOverlay');
+    if (overlay) {
+        overlay.classList.toggle('active');
+    }
+}
+
+function loadSettings() {
+    try {
+        // Загружаем сохраненные настройки из localStorage
+        const settings = JSON.parse(localStorage.getItem('gameSettings') || '{}');
+        
+        // Устанавливаем значения переключателей
+        const soundToggle = document.getElementById('soundToggle');
+        const musicToggle = document.getElementById('musicToggle');
+        const notificationsToggle = document.getElementById('notificationsToggle');
+        const snowToggle = document.getElementById('snowToggle');
+        
+        if (soundToggle) soundToggle.checked = settings.sound ?? true;
+        if (musicToggle) musicToggle.checked = settings.music ?? true;
+        if (notificationsToggle) notificationsToggle.checked = settings.notifications ?? true;
+        if (snowToggle) {
+            // Снег включен по умолчанию
+            snowToggle.checked = settings.snow ?? true;
+        }
+        
+        // Запускаем снег при загрузке страницы
+        if (!settings.hasOwnProperty('snow') || settings.snow) {
+            snowfall.start();
+        }
+        
+        // Добавляем обработчики изменений
+        ['sound', 'music', 'notifications'].forEach(setting => {
+            const toggle = document.getElementById(`${setting}Toggle`);
+            if (toggle) {
+                toggle.addEventListener('change', (e) => {
+                    const settings = JSON.parse(localStorage.getItem('gameSettings') || '{}');
+                    settings[setting] = e.target.checked;
+                    localStorage.setItem('gameSettings', JSON.stringify(settings));
+                });
+            }
+        });
+
+        // Добавляем обработчик для снега
+        if (snowToggle) {
+            snowToggle.addEventListener('change', (e) => {
+                const settings = JSON.parse(localStorage.getItem('gameSettings') || '{}');
+                settings.snow = e.target.checked;
+                localStorage.setItem('gameSettings', JSON.stringify(settings));
+                
+                if (e.target.checked) {
+                    snowfall.start();
+                } else {
+                    snowfall.stop();
+                }
+            });
+        }
+    } catch (error) {
+        console.error('Ошибка загрузки настроек:', error);
+    }
+}
+
+// Функция выхода из аккаунта
+async function logout() {
+    try {
+        // Очищаем данные пользователя
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem('gameSettings');
+        
+        // Очищаем интервал регенерации энергии
+        if (energyRegenInterval) {
+            clearInterval(energyRegenInterval);
+        }
+        
+        // Перенаправляем на страницу входа
+        window.location.href = 'index.html';
+    } catch (error) {
+        console.error('Ошибка при выходе:', error);
+    }
+}
+
+// Закрытие настроек при клике вне окна
+document.addEventListener('click', (e) => {
+    const overlay = document.getElementById('settingsOverlay');
+    const settingsPanel = document.querySelector('.settings-panel');
+    const avatar = document.getElementById('userAvatar');
+    
+    if (overlay && overlay.classList.contains('active')) {
+        if (!settingsPanel.contains(e.target) && e.target !== avatar) {
+            overlay.classList.remove('active');
+        }
+    }
 });
 
 // Очистка интервала при уходе со страницы
