@@ -36,7 +36,7 @@ async function login() {
     }
 
     try {
-        const { data, error } = await supabaseClient
+        const { data, error } = await window.supabaseClient
             .from('profiles')
             .select('*')
             .eq('username', username)
@@ -79,7 +79,7 @@ async function register() {
 
     try {
         // Проверяем, существует ли пользователь с таким никнеймом
-        const { data: existingUser, error: checkError } = await supabaseClient
+        const { data: existingUser, error: checkError } = await window.supabaseClient
             .from('profiles')
             .select('username')
             .eq('username', username)
@@ -93,7 +93,7 @@ async function register() {
         }
 
         // Создаем нового пользователя
-        const { data, error } = await supabaseClient
+        const { data, error } = await window.supabaseClient
             .from('profiles')
             .insert([
                 {

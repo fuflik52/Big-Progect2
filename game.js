@@ -1,6 +1,6 @@
 // Инициализация Supabase
 const { createClient } = supabase;
-const supabaseClient = createClient(
+window.supabaseClient = createClient(
     'https://hzsctjmzqjsgmjigshwd.supabase.co',
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh6c2N0am16cWpzZ21qaWdzaHdkIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NzU3NjQwNTYsImV4cCI6MjA1MTYxNDUxNn0.OVBvyWchb8yAi-xDAl5PTVks2YUD7DsYN3cVW-Gjuh4'
 );
@@ -31,7 +31,7 @@ async function loadUserData() {
     }
 
     try {
-        const { data, error } = await supabaseClient
+        const { data, error } = await window.supabaseClient
             .from('profiles')
             .select('*')
             .eq('username', currentUser.username)
@@ -67,7 +67,7 @@ async function handleCharacterClick() {
     // Обновляем данные в базе
     try {
         const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-        const { error } = await supabaseClient
+        const { error } = await window.supabaseClient
             .from('profiles')
             .update({
                 coins: Math.floor(gameState.balance),
