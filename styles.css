@@ -50,6 +50,23 @@ input:focus {
     outline: none;
 }
 
+.password-group {
+    position: relative;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #666;
+}
+
+.password-toggle:hover {
+    color: #667eea;
+}
+
 .buttons {
     display: flex;
     gap: 10px;
@@ -77,6 +94,22 @@ input:focus {
 
 .btn:hover {
     opacity: 0.9;
+}
+
+.register-link {
+    text-align: center;
+    margin-top: 20px;
+    color: #666;
+}
+
+.register-link a {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.register-link a:hover {
+    text-decoration: underline;
 }
 
 .notification {
