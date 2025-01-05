@@ -47,7 +47,7 @@ async function login() {
         if (data) {
             showNotification('Вы успешно вошли в систему!');
             localStorage.setItem('currentUser', JSON.stringify(data));
-            window.location.href = 'index.html';
+            window.location.href = 'game.html';
         } else {
             showNotification('Неверный никнейм или пароль', true);
         }
@@ -109,7 +109,7 @@ async function register() {
 
         showNotification('Регистрация успешна!');
         localStorage.setItem('currentUser', JSON.stringify(data));
-        window.location.href = 'index.html';
+        window.location.href = 'game.html';
     } catch (error) {
         console.error('Ошибка:', error);
         showNotification('Ошибка регистрации: ' + error.message, true);
@@ -168,6 +168,6 @@ function showLoginForm() {
 window.addEventListener('load', async () => {
     const { data: { session }, error } = await supabaseClient.auth.getSession();
     if (session) {
-        window.location.href = 'index.html';
+        window.location.href = 'game.html';
     }
 });

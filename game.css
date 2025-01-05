@@ -1,0 +1,191 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #1a1a1a;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.game-container {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    max-width: 480px;
+    margin: 0 auto;
+    background: #121212;
+}
+
+/* Верхняя панель */
+.top-panel {
+    background: #1e2620;
+    color: white;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    border-radius: 0 0 20px 20px;
+    margin: 0 10px;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid #4CAF50;
+}
+
+.balance {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(76, 175, 80, 0.1);
+    padding: 8px 12px;
+    border-radius: 20px;
+    border: 1px solid rgba(76, 175, 80, 0.3);
+}
+
+.coin-icon {
+    width: 24px;
+    height: 24px;
+}
+
+/* Основной контент */
+.content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    position: relative;
+    color: white;
+}
+
+.section {
+    display: none;
+    height: 100%;
+}
+
+.section.active {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Кнопка кликера */
+.clicker-button {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    cursor: pointer;
+    user-select: none;
+    transition: transform 0.1s;
+}
+
+.clicker-gradient {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: linear-gradient(180deg, #2BBE56 0%, #0E2615 100%);
+}
+
+.clicker-gradient-inner {
+    position: absolute;
+    width: 168px;
+    height: 168px;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: radial-gradient(59.42% 53.02% at 50% 46.98%, #2BBE56 38.7%, #0E2615 100%);
+}
+
+.clicker-koala {
+    position: absolute;
+    width: 157px;
+    height: 157px;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    object-fit: cover;
+    z-index: 1;
+    border-radius: 50%;
+    overflow: hidden;
+    margin-top: 10px;
+}
+
+.clicker-button:active {
+    transform: scale(0.95);
+}
+
+.clicker-button:active .clicker-gradient {
+    filter: brightness(0.9);
+}
+
+/* Нижняя навигация */
+.bottom-nav {
+    background: #1e2620;
+    padding: 15px 10px;
+    display: flex;
+    justify-content: space-around;
+    border-radius: 20px 20px 0 0;
+    margin: 0 10px;
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: #888;
+    font-size: 12px;
+    gap: 4px;
+    transition: color 0.3s;
+}
+
+.nav-icon {
+    width: 24px;
+    height: 24px;
+    opacity: 0.7;
+    transition: opacity 0.3s;
+}
+
+.nav-item.active {
+    color: #4CAF50;
+}
+
+.nav-item.active .nav-icon {
+    opacity: 1;
+}
+
+/* Анимации */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.balance-increase {
+    animation: pulse 0.3s ease-in-out;
+}
+
+/* Стили для заголовков секций */
+h2 {
+    color: #4CAF50;
+    margin-bottom: 20px;
+    text-align: center;
+    font-size: 24px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}

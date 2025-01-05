@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Кликер</title>
+    <link rel="stylesheet" href="game.css">
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="game-container">
+        <!-- Верхняя панель -->
+        <div class="top-panel">
+            <div class="user-info">
+                <img src="https://i.postimg.cc/vBBWGZjL/image.png" alt="Avatar" class="avatar" id="userAvatar">
+                <span id="username">Пользователь</span>
+            </div>
+            <div class="balance">
+                <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="Coins" class="coin-icon">
+                <span id="balance">0</span>
+            </div>
+        </div>
+
+        <!-- Основной контент -->
+        <div class="content" id="content">
+            <!-- Секция Home -->
+            <div class="section active" id="home">
+                <div class="clicker-button" id="clickerButton">
+                    <div class="clicker-gradient"></div>
+                    <div class="clicker-gradient-inner"></div>
+                    <img src="https://i.postimg.cc/ZnggtH7v/image.png" alt="Koala" class="clicker-koala">
+                </div>
+            </div>
+
+            <!-- Секция Frens -->
+            <div class="section" id="frens">
+                <h2>Друзья</h2>
+                <div class="friends-list">
+                    <!-- Здесь будет список друзей -->
+                </div>
+            </div>
+
+            <!-- Секция Cards -->
+            <div class="section" id="cards">
+                <h2>Карты</h2>
+                <div class="cards-grid">
+                    <!-- Здесь будут карточки -->
+                </div>
+            </div>
+
+            <!-- Секция Mining -->
+            <div class="section" id="mining">
+                <h2>Майнинг</h2>
+                <div class="mining-container">
+                    <!-- Здесь будет контент майнинга -->
+                </div>
+            </div>
+
+            <!-- Секция Reward -->
+            <div class="section" id="reward">
+                <h2>Награды</h2>
+                <div class="rewards-list">
+                    <!-- Здесь будут награды -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Нижняя навигация -->
+        <nav class="bottom-nav">
+            <a href="#" class="nav-item active" data-section="home">
+                <img src="https://i.postimg.cc/Y986QWcW/image.png" alt="Home" class="nav-icon">
+                <span>Home</span>
+            </a>
+            <a href="#" class="nav-item" data-section="frens">
+                <img src="https://i.postimg.cc/bYHMFCPx/image.png" alt="Frens" class="nav-icon">
+                <span>Frens</span>
+            </a>
+            <a href="#" class="nav-item" data-section="cards">
+                <img src="https://i.postimg.cc/T2C0DZG4/image.png" alt="Cards" class="nav-icon">
+                <span>Cards</span>
+            </a>
+            <a href="#" class="nav-item" data-section="mining">
+                <img src="https://i.postimg.cc/jd48ZLzZ/image.png" alt="Mining" class="nav-icon">
+                <span>Mining</span>
+            </a>
+            <a href="#" class="nav-item" data-section="reward">
+                <img src="https://i.postimg.cc/XY2s6m15/image.png" alt="Reward" class="nav-icon">
+                <span>Reward</span>
+            </a>
+        </nav>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>
