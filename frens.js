@@ -47,10 +47,17 @@ async function updateFriendsList() {
     try {
         console.log('Текущий пользователь:', user);
 
-        // Получаем список друзей
+        // Получаем список друзей с их профилями
         const { data: friends, error } = await supabaseClient
             .from('user_friends')
-            .select('id, friend_id')
+            .select(`
+                id,
+                friend_id,
+                friends:profiles!user_friends_friend_id_fkey (
+                    username,
+                    balance
+                )
+            `)
             .eq('user_id', user.id);
 
         if (error) {
@@ -76,49 +83,17 @@ async function updateFriendsList() {
             return;
         }
 
-        // Получаем информацию о каждом друге
-        const friendProfiles = await Promise.all(
-            friends.map(async (friendship) => {
-                console.log('Загрузка профиля для friend_id:', friendship.friend_id);
-                const { data: profile, error: profileError } = await supabaseClient
-                    .from('profiles')
-                    .select('username, balance')
-                    .eq('id', friendship.friend_id)
-                    .single();
-
-                if (profileError) {
-                    console.error('Ошибка загрузки профиля друга:', profileError);
-                    return null;
-                }
-
-                console.log('Загруженный профиль:', profile);
-                return {
-                    id: friendship.id,
-                    username: profile.username,
-                    balance: profile.balance || 0
-                };
-            })
-        );
-
-        console.log('Загруженные профили друзей:', friendProfiles);
-
-        // Фильтруем null значения и обновляем список
-        const validProfiles = friendProfiles.filter(profile => profile !== null);
-        
+        // Обновляем список друзей
         if (friendListContent) {
-            if (validProfiles.length > 0) {
-                friendListContent.innerHTML = validProfiles.map(friend => `
-                    <div class="friend-item">
-                        <div class="friend-info">
-                            <span class="friend-name">${friend.username}</span>
-                            <span class="friend-balance">${friend.balance} токенов</span>
-                        </div>
-                        <i class="fas fa-times friend-remove" onclick="removeFriend(${friend.id})"></i>
+            friendListContent.innerHTML = friends.map(friend => `
+                <div class="friend-item">
+                    <div class="friend-info">
+                        <span class="friend-name">${friend.friends.username}</span>
+                        <span class="friend-balance">${friend.friends.balance || 0} токенов</span>
                     </div>
-                `).join('');
-            } else {
-                friendListContent.innerHTML = '<div class="no-friends">Ошибка загрузки списка друзей</div>';
-            }
+                    <i class="fas fa-times friend-remove" onclick="removeFriend(${friend.id})"></i>
+                </div>
+            `).join('');
         }
     } catch (error) {
         console.error('Ошибка обновления списка друзей:', error);
@@ -208,12 +183,14 @@ async function addFriend() {
         }
 
         // Добавляем друга
-        const { error: addError } = await supabaseClient
+        const { data: newFriend, error: addError } = await supabaseClient
             .from('user_friends')
             .insert([{
                 user_id: user.id,
                 friend_id: friendUser.id
-            }]);
+            }])
+            .select()
+            .single();
 
         if (addError) {
             console.error('Ошибка добавления друга:', addError);
@@ -221,7 +198,7 @@ async function addFriend() {
             return;
         }
 
-        console.log('Друг успешно добавлен');
+        console.log('Друг успешно добавлен:', newFriend);
 
         // Очищаем поле ввода и обновляем список
         friendUsernameInput.value = '';

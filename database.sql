@@ -1,124 +1,125 @@
--- Удаление существующих таблиц
-DROP TABLE IF EXISTS user_cards;
-DROP TABLE IF EXISTS user_friends;
-DROP TABLE IF EXISTS mining_stats;
-DROP TABLE IF EXISTS rewards;
-DROP TABLE IF EXISTS profiles;
+-- Включаем расширения
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- 1. Создание таблицы профилей
-CREATE TABLE profiles (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    username VARCHAR(255) NOT NULL UNIQUE,
-    user_password VARCHAR(255) NOT NULL CHECK (LENGTH(user_password) >= 6),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
-    balance INTEGER DEFAULT 0 CHECK (balance >= 0),
-    click_power INTEGER DEFAULT 1 CHECK (click_power >= 1),
-    total_clicks INTEGER DEFAULT 0 CHECK (total_clicks >= 0),
-    energy INTEGER DEFAULT 100 CHECK (energy >= 0 AND energy <= 100),
-    last_energy_update TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()),
-    last_daily_reward TIMESTAMP WITH TIME ZONE
+-- Создаем схему public, если она не существует
+CREATE SCHEMA IF NOT EXISTS public;
+
+-- Создаем таблицу профилей пользователей
+CREATE TABLE IF NOT EXISTS public.profiles (
+    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    username TEXT UNIQUE NOT NULL,
+    balance BIGINT DEFAULT 0,
+    energy INTEGER DEFAULT 100,
+    max_energy INTEGER DEFAULT 100,
+    last_energy_update TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+    total_clicks BIGINT DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 
-CREATE INDEX idx_profiles_username ON profiles(username);
-
--- 2. Создание таблицы друзей
-CREATE TABLE user_friends (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
-    friend_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
-    UNIQUE(user_id, friend_id),
-    CHECK (user_id != friend_id)
+-- Создаем таблицу друзей
+CREATE TABLE IF NOT EXISTS public.user_friends (
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    friend_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+    UNIQUE(user_id, friend_id)
 );
 
-CREATE INDEX idx_user_friends_user_id ON user_friends(user_id);
-CREATE INDEX idx_user_friends_friend_id ON user_friends(friend_id);
+-- Создаем индексы
+CREATE INDEX IF NOT EXISTS idx_profiles_username ON profiles(username);
+CREATE INDEX IF NOT EXISTS idx_user_friends_user_id ON user_friends(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_friends_friend_id ON user_friends(friend_id);
 
--- 3. Создание таблицы карт
-CREATE TABLE user_cards (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
-    card_type VARCHAR(50) NOT NULL,
-    card_level INTEGER DEFAULT 1 CHECK (card_level >= 1),
-    power_bonus INTEGER DEFAULT 0 CHECK (power_bonus >= 0),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
-);
-
-CREATE INDEX idx_user_cards_user_id ON user_cards(user_id);
-CREATE INDEX idx_user_cards_type ON user_cards(card_type);
-
--- 4. Создание таблицы майнинга
-CREATE TABLE mining_stats (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
-    mining_power INTEGER DEFAULT 0 CHECK (mining_power >= 0),
-    last_mining_time TIMESTAMP WITH TIME ZONE,
-    total_mined INTEGER DEFAULT 0 CHECK (total_mined >= 0),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
-);
-
-CREATE INDEX idx_mining_stats_user_id ON mining_stats(user_id);
-
--- 5. Создание таблицы наград
-CREATE TABLE rewards (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
-    reward_type VARCHAR(50) NOT NULL,
-    amount INTEGER NOT NULL CHECK (amount > 0),
-    claimed BOOLEAN DEFAULT false,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
-    claimed_at TIMESTAMP WITH TIME ZONE
-);
-
-CREATE INDEX idx_rewards_user_id ON rewards(user_id);
-CREATE INDEX idx_rewards_type ON rewards(reward_type);
-
--- Настройка RLS и политик
-ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE user_friends ENABLE ROW LEVEL SECURITY;
-ALTER TABLE user_cards ENABLE ROW LEVEL SECURITY;
-ALTER TABLE mining_stats ENABLE ROW LEVEL SECURITY;
-ALTER TABLE rewards ENABLE ROW LEVEL SECURITY;
-
--- Политики для profiles
-CREATE POLICY "profiles_policy" ON profiles USING (true) WITH CHECK (true);
-
--- Политики для user_friends
-CREATE POLICY "user_friends_policy" ON user_friends USING (true) WITH CHECK (true);
-
--- Политики для user_cards
-CREATE POLICY "user_cards_policy" ON user_cards USING (true) WITH CHECK (true);
-
--- Политики для mining_stats
-CREATE POLICY "mining_stats_policy" ON mining_stats USING (true) WITH CHECK (true);
-
--- Политики для rewards
-CREATE POLICY "rewards_policy" ON rewards USING (true) WITH CHECK (true);
-
--- Создание функции для обновления updated_at
+-- Создаем функцию для обновления временной метки
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
-    NEW.updated_at = NOW();
+    NEW.updated_at = timezone('utc'::text, now());
     RETURN NEW;
 END;
 $$ language 'plpgsql';
 
--- Создание триггеров для обновления updated_at
+-- Создаем триггер для обновления временной метки
+DROP TRIGGER IF EXISTS update_profiles_updated_at ON profiles;
 CREATE TRIGGER update_profiles_updated_at
     BEFORE UPDATE ON profiles
     FOR EACH ROW
-    EXECUTE PROCEDURE update_updated_at_column();
+    EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_user_cards_updated_at
-    BEFORE UPDATE ON user_cards
-    FOR EACH ROW
-    EXECUTE PROCEDURE update_updated_at_column();
+-- Включаем RLS (Row Level Security)
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_friends ENABLE ROW LEVEL SECURITY;
 
-CREATE TRIGGER update_mining_stats_updated_at
-    BEFORE UPDATE ON mining_stats
+-- Политики безопасности для profiles
+DROP POLICY IF EXISTS "Users can view all profiles" ON profiles;
+DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
+DROP POLICY IF EXISTS "Users can insert own profile" ON profiles;
+
+CREATE POLICY "Users can view all profiles"
+ON profiles FOR SELECT
+USING (true);
+
+CREATE POLICY "Users can update own profile"
+ON profiles FOR UPDATE
+USING (auth.uid() = id);
+
+CREATE POLICY "Users can insert own profile"
+ON profiles FOR INSERT
+WITH CHECK (auth.uid() = id);
+
+-- Политики безопасности для user_friends
+DROP POLICY IF EXISTS "Users can view their own friends" ON user_friends;
+DROP POLICY IF EXISTS "Users can add friends" ON user_friends;
+DROP POLICY IF EXISTS "Users can remove their own friends" ON user_friends;
+
+CREATE POLICY "Users can view their own friends"
+ON user_friends FOR SELECT
+USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can add friends"
+ON user_friends FOR INSERT
+WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can remove their own friends"
+ON user_friends FOR DELETE
+USING (auth.uid() = user_id);
+
+-- Функция для создания профиля пользователя
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger AS $$
+BEGIN
+    INSERT INTO public.profiles (id, username, balance, energy, max_energy)
+    VALUES (new.id, new.raw_user_meta_data->>'username', 0, 100, 100);
+    RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Триггер для автоматического создания профиля
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+    AFTER INSERT ON auth.users
+    FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- Функция для обновления энергии
+CREATE OR REPLACE FUNCTION public.update_energy()
+RETURNS trigger AS $$
+BEGIN
+    -- Обновляем энергию только если прошло время с последнего обновления
+    IF NEW.last_energy_update < timezone('utc'::text, now()) - interval '1 second' THEN
+        -- Увеличиваем энергию на 1 за каждую секунду, но не больше максимума
+        NEW.energy := LEAST(NEW.max_energy, NEW.energy + 
+            EXTRACT(EPOCH FROM timezone('utc'::text, now()) - NEW.last_energy_update)::integer);
+        NEW.last_energy_update := timezone('utc'::text, now());
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Триггер для автоматического обновления энергии
+DROP TRIGGER IF EXISTS on_profile_energy_update ON profiles;
+CREATE TRIGGER on_profile_energy_update
+    BEFORE UPDATE ON profiles
     FOR EACH ROW
-    EXECUTE PROCEDURE update_updated_at_column();
+    WHEN (OLD.* IS DISTINCT FROM NEW.*)
+    EXECUTE FUNCTION public.update_energy();
