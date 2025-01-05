@@ -1,0 +1,164 @@
+.frens-container {
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 15px;
+    padding: 20px;
+    color: white;
+    max-width: 500px;
+    margin: 20px auto;
+    font-family: 'Arial', sans-serif;
+}
+
+.frens-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.frens-header h2 {
+    font-size: 24px;
+    margin: 0;
+    padding: 10px 0;
+}
+
+.frens-header p {
+    color: rgba(255, 255, 255, 0.7);
+    margin: 5px 0;
+}
+
+.invite-section {
+    background: rgba(33, 33, 33, 0.9);
+    border-radius: 10px;
+    padding: 15px;
+    margin: 15px 0;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.invite-icon {
+    background: #1e472e;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.invite-icon i {
+    color: #ffffff;
+    font-size: 20px;
+}
+
+.invite-text h3 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.invite-text p {
+    margin: 5px 0 0;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 14px;
+}
+
+.referral-info {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.referral-info h3 {
+    font-size: 18px;
+    margin: 0;
+}
+
+.referral-info p {
+    color: rgba(255, 255, 255, 0.7);
+    margin: 5px 0;
+    font-size: 14px;
+}
+
+.friend-list {
+    margin: 20px 0;
+}
+
+.friend-list-header {
+    color: #3391ff;
+    font-size: 16px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    display: inline-block;
+}
+
+.friend-list-content {
+    background: rgba(33, 33, 33, 0.5);
+    border-radius: 8px;
+    padding: 10px;
+    margin-top: 5px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.friend-item {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.friend-item:last-child {
+    border-bottom: none;
+}
+
+.copy-link-container {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.copy-link-button {
+    background: #27ae60;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 15px;
+    flex-grow: 1;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.share-button {
+    background: #27ae60;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 15px;
+    width: 50px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s;
+}
+
+.copy-link-button:hover,
+.share-button:hover {
+    background: #219a52;
+}
+
+.notification {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(39, 174, 96, 0.9);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.notification.show {
+    opacity: 1;
+}

@@ -35,24 +35,29 @@ async function login() {
     }
 
     try {
+        // Сначала проверяем существование пользователя
         const { data, error } = await supabaseClient
             .from('profiles')
-            .select('*')
+            .select('id, username, balance, click_power, total_clicks')
             .eq('username', username)
             .eq('user_password', password)
-            .single();
+            .limit(1);
 
-        if (error) throw error;
+        if (error) {
+            console.error('Ошибка запроса:', error);
+            throw error;
+        }
 
-        if (data) {
+        if (data && data.length > 0) {
             showNotification('Вы успешно вошли в систему!');
-            localStorage.setItem('currentUser', JSON.stringify(data));
+            localStorage.setItem('currentUser', JSON.stringify(data[0]));
             window.location.href = 'game.html';
         } else {
             showNotification('Неверный никнейм или пароль', true);
         }
     } catch (error) {
-        showNotification('Ошибка входа: ' + error.message, true);
+        console.error('Ошибка входа:', error);
+        showNotification('Ошибка входа. Пожалуйста, попробуйте позже', true);
     }
 }
 

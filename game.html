@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Кликер</title>
     <link rel="stylesheet" href="game.css">
+    <link rel="stylesheet" href="frens.css">
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <body>
@@ -84,10 +86,41 @@
             </div>
 
             <!-- Секция Frens -->
-            <div class="section" id="frens">
-                <h2>Друзья</h2>
-                <div class="friends-list">
-                    <!-- Здесь будет список друзей -->
+            <div class="section" id="frensSection">
+                <div class="frens-container">
+                    <div class="frens-header">
+                        <h2>Пригласи друзей!</h2>
+                        <p>Вы и ваши друзья получите бонусы.</p>
+                    </div>
+                    
+                    <div class="invite-section">
+                        <div class="invite-icon">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                        <div class="invite-text">
+                            <h3>Пригласи друга!</h3>
+                            <p>+10% от добытых токенов пользователя.</p>
+                        </div>
+                    </div>
+
+                    <div class="referral-info">
+                        <h3>Двухуровневая реферальная система</h3>
+                        <p>Вы получите ¼ от токенов пользователей, приглашенных вашими друзьями.</p>
+                    </div>
+
+                    <div class="friend-list">
+                        <div class="friend-list-header">Список друзей (0)</div>
+                        <div class="friend-list-content">
+                            <!-- Здесь будет список друзей -->
+                        </div>
+                    </div>
+
+                    <div class="copy-link-container">
+                        <button class="copy-link-button" onclick="copyReferralLink()">Скопировать ссылку</button>
+                        <button class="share-button" onclick="navigator.share({title: 'Присоединяйся к игре!', url: window.location.href})">
+                            <i class="fas fa-share-alt"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -135,7 +168,7 @@
                 <img src="https://i.postimg.cc/Y986QWcW/image.png" alt="Home" class="nav-icon">
                 <span>Home</span>
             </a>
-            <a href="#" class="nav-item" data-section="frens">
+            <a href="#" class="nav-item" data-section="frensSection">
                 <img src="https://i.postimg.cc/bYHMFCPx/image.png" alt="Frens" class="nav-icon">
                 <span>Frens</span>
             </a>
@@ -153,6 +186,7 @@
             </a>
         </nav>
     </div>
+    <script src="frens.js"></script>
     <script src="game.js"></script>
     <script src="snow.js"></script>
 </body>

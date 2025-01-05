@@ -9,56 +9,72 @@ DROP TABLE IF EXISTS profiles;
 CREATE TABLE profiles (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     username VARCHAR(255) NOT NULL UNIQUE,
-    user_password VARCHAR(255) NOT NULL,
+    user_password VARCHAR(255) NOT NULL CHECK (LENGTH(user_password) >= 6),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
-    balance INTEGER DEFAULT 0,
-    click_power INTEGER DEFAULT 1,
-    total_clicks INTEGER DEFAULT 0,
+    balance INTEGER DEFAULT 0 CHECK (balance >= 0),
+    click_power INTEGER DEFAULT 1 CHECK (click_power >= 1),
+    total_clicks INTEGER DEFAULT 0 CHECK (total_clicks >= 0),
+    energy INTEGER DEFAULT 100 CHECK (energy >= 0 AND energy <= 100),
+    last_energy_update TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()),
     last_daily_reward TIMESTAMP WITH TIME ZONE
 );
+
+CREATE INDEX idx_profiles_username ON profiles(username);
 
 -- 2. Создание таблицы друзей
 CREATE TABLE user_friends (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    user_id UUID REFERENCES profiles(id),
-    friend_id UUID REFERENCES profiles(id),
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+    friend_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
-    UNIQUE(user_id, friend_id)
+    UNIQUE(user_id, friend_id),
+    CHECK (user_id != friend_id)
 );
+
+CREATE INDEX idx_user_friends_user_id ON user_friends(user_id);
+CREATE INDEX idx_user_friends_friend_id ON user_friends(friend_id);
 
 -- 3. Создание таблицы карт
 CREATE TABLE user_cards (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    user_id UUID REFERENCES profiles(id),
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     card_type VARCHAR(50) NOT NULL,
-    card_level INTEGER DEFAULT 1,
-    power_bonus INTEGER DEFAULT 0,
+    card_level INTEGER DEFAULT 1 CHECK (card_level >= 1),
+    power_bonus INTEGER DEFAULT 0 CHECK (power_bonus >= 0),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
+
+CREATE INDEX idx_user_cards_user_id ON user_cards(user_id);
+CREATE INDEX idx_user_cards_type ON user_cards(card_type);
 
 -- 4. Создание таблицы майнинга
 CREATE TABLE mining_stats (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    user_id UUID REFERENCES profiles(id),
-    mining_power INTEGER DEFAULT 0,
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+    mining_power INTEGER DEFAULT 0 CHECK (mining_power >= 0),
     last_mining_time TIMESTAMP WITH TIME ZONE,
-    total_mined INTEGER DEFAULT 0,
+    total_mined INTEGER DEFAULT 0 CHECK (total_mined >= 0),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
+CREATE INDEX idx_mining_stats_user_id ON mining_stats(user_id);
+
 -- 5. Создание таблицы наград
 CREATE TABLE rewards (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    user_id UUID REFERENCES profiles(id),
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     reward_type VARCHAR(50) NOT NULL,
-    amount INTEGER NOT NULL,
+    amount INTEGER NOT NULL CHECK (amount > 0),
     claimed BOOLEAN DEFAULT false,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
     claimed_at TIMESTAMP WITH TIME ZONE
 );
+
+CREATE INDEX idx_rewards_user_id ON rewards(user_id);
+CREATE INDEX idx_rewards_type ON rewards(reward_type);
 
 -- Настройка RLS и политик
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
