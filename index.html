@@ -3,84 +3,129 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Вход в игру</title>
-    <!-- Стили -->
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
-    
-    <!-- Supabase -->
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    
-    <!-- Конфигурация и основные скрипты -->
-    <script src="config.js"></script>
-    <script src="app.js" defer></script>
-</head>
-<body>
-    <div class="container">
-        <!-- Форма входа -->
-        <div class="form-container" id="loginForm">
-            <h2>Вход в игру</h2>
-            <form>
-                <div class="form-group">
-                    <input type="email" id="username" placeholder="Email" required>
-                </div>
-                <div class="form-group">
-                    <input type="password" id="password" placeholder="Пароль" required>
-                </div>
-                <div class="buttons">
-                    <button type="submit" class="btn btn-primary">Войти</button>
-                </div>
-                <p>Нет аккаунта? <a href="#" id="showRegister">Зарегистрироваться</a></p>
-            </form>
-        </div>
+    <title>Авторизация</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #6c5ce7, #a363d9);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
 
-        <!-- Форма регистрации -->
-        <div class="form-container" id="registerForm" style="display: none;">
-            <h2>Регистрация</h2>
-            <form>
-                <div class="form-group">
-                    <input type="email" id="regUsername" placeholder="Email" required>
-                </div>
-                <div class="form-group">
-                    <input type="password" id="regPassword" placeholder="Пароль" required>
-                </div>
-                <div class="form-group">
-                    <input type="password" id="confirmPassword" placeholder="Подтвердите пароль" required>
-                </div>
-                <div class="buttons">
-                    <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
-                </div>
-                <p>Уже есть аккаунт? <a href="#" id="showLogin">Войти</a></p>
-            </form>
-        </div>
-    </div>
+        .auth-container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+            margin: 20px;
+        }
 
-    <!-- Уведомления -->
-    <div class="notification" id="notification"></div>
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Игра - Авторизация</title>
-    <link rel="stylesheet" href="styles.css">
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+        h1 {
+            text-align: center;
+            color: #2d3436;
+            margin-bottom: 30px;
+            font-size: 24px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #6c5ce7;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .login-btn {
+            background-color: #6c5ce7;
+            color: white;
+        }
+
+        .register-btn {
+            background-color: #a363d9;
+            color: white;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        #notifications {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .notification {
+            background: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+            transform: translateX(120%);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .notification.success {
+            border-left: 4px solid #00b894;
+        }
+
+        .notification.error {
+            border-left: 4px solid #d63031;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <div id="notifications"></div>
-    <div class="container">
-        <div class="auth-form">
-            <h2>Авторизация</h2>
-            <div class="form-group">
-                <input type="text" id="username" placeholder="Введите никнейм" required>
-            </div>
-            <div class="form-group password-group">
-                <input type="password" id="password" placeholder="Введите пароль" required>
-            </div>
-            <div class="buttons">
-                <button onclick="login()" class="btn btn-primary">Войти</button>
-                <button onclick="register()" class="btn btn-secondary">Регистрация</button>
-            </div>
+    <div class="auth-container">
+        <h1>Авторизация</h1>
+        <div class="input-group">
+            <input type="text" id="username" placeholder="Введите никнейм" required>
+        </div>
+        <div class="input-group">
+            <input type="password" id="password" placeholder="Введите пароль" required>
+        </div>
+        <div class="button-group">
+            <button class="login-btn" onclick="login()">Войти</button>
+            <button class="register-btn" onclick="register()">Регистрация</button>
         </div>
     </div>
     <script src="app.js"></script>

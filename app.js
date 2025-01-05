@@ -1,7 +1,8 @@
 // Инициализация Supabase
-const supabaseUrl = 'https://hzsctjmzqjsgmjigshwd.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh6c2N0am16cWpzZ21qaWdzaHdkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzYwMzg1MTYsImV4cCI6MjA1MTYxNDUxNn0.OVBvyWchb8yAi-xDAl5PTVks2YUD7DsYN3cVW-Gjuh4';
-const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+const supabaseClient = supabase.createClient(
+    'https://hzsctjmzqjsgmjigshwd.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh6c2N0am16cWpzZ21qaWdzaHdkIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NzU3NjQwNTYsImV4cCI6MjA1MTYxNDUxNn0.OVBvyWchb8yAi-xDAl5PTVks2YUD7DsYN3cVW-Gjuh4'
+);
 
 // Функция для показа уведомлений
 function showNotification(message, isError = false) {
@@ -120,9 +121,9 @@ async function register() {
 }
 
 // Проверка авторизации при загрузке страницы
-window.addEventListener('load', async () => {
-    const { data: { session }, error } = await supabaseClient.auth.getSession();
-    if (session) {
+window.addEventListener('load', () => {
+    const currentUser = localStorage.getItem('currentUser');
+    if (currentUser) {
         window.location.href = 'game.html';
     }
 });
