@@ -1,8 +1,7 @@
 // Инициализация Supabase
-const supabaseClient = supabase.createClient(
-    'https://hzsctjmzqjsgmjigshwd.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh6c2N0am16cWpzZ21qaWdzaHdkIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NzU3NjQwNTYsImV4cCI6MjA1MTYxNDUxNn0.OVBvyWchb8yAi-xDAl5PTVks2YUD7DsYN3cVW-Gjuh4'
-);
+const supabaseUrl = 'https://hzsctjmzqjsgmjigshwd.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh6c2N0am16cWpzZ21qaWdzaHdkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzYwMzg1MTYsImV4cCI6MjA1MTYxNDUxNn0.OVBvyWchb8yAi-xDAl5PTVks2YUD7DsYN3cVW-Gjuh4';
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
 // Функция для показа уведомлений
 function showNotification(message, isError = false) {
@@ -36,7 +35,7 @@ async function login() {
     }
 
     try {
-        const { data, error } = await window.supabaseClient
+        const { data, error } = await supabaseClient
             .from('profiles')
             .select('*')
             .eq('username', username)
@@ -48,7 +47,7 @@ async function login() {
         if (data) {
             showNotification('Вы успешно вошли в систему!');
             localStorage.setItem('currentUser', JSON.stringify(data));
-            window.location.href = 'game.html';
+            window.location.href = 'index.html';
         } else {
             showNotification('Неверный никнейм или пароль', true);
         }
@@ -79,7 +78,7 @@ async function register() {
 
     try {
         // Проверяем, существует ли пользователь с таким никнеймом
-        const { data: existingUser, error: checkError } = await window.supabaseClient
+        const { data: existingUser, error: checkError } = await supabaseClient
             .from('profiles')
             .select('username')
             .eq('username', username)
@@ -93,17 +92,14 @@ async function register() {
         }
 
         // Создаем нового пользователя
-        const { data, error } = await window.supabaseClient
+        const { data, error } = await supabaseClient
             .from('profiles')
             .insert([
                 {
                     username: username,
                     user_password: password,
                     created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString(),
-                    score: 0,
-                    level: 1,
-                    coins: 0
+                    updated_at: new Date().toISOString()
                 }
             ])
             .select()
@@ -111,9 +107,9 @@ async function register() {
 
         if (error) throw error;
 
-        showNotification('Регистрация успешна! Добро пожаловать в игру!');
+        showNotification('Регистрация успешна!');
         localStorage.setItem('currentUser', JSON.stringify(data));
-        window.location.href = 'game.html';
+        window.location.href = 'index.html';
     } catch (error) {
         console.error('Ошибка:', error);
         showNotification('Ошибка регистрации: ' + error.message, true);
@@ -121,9 +117,9 @@ async function register() {
 }
 
 // Проверка авторизации при загрузке страницы
-window.addEventListener('load', () => {
-    const currentUser = localStorage.getItem('currentUser');
-    if (currentUser) {
-        window.location.href = 'game.html';
+window.addEventListener('load', async () => {
+    const { data: { session }, error } = await supabaseClient.auth.getSession();
+    if (session) {
+        window.location.href = 'index.html';
     }
 });
