@@ -1,13 +1,34 @@
 // Конфигурация Supabase
 const SUPABASE_URL = 'https://hzsctjmzqjsgmjigshwd.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh6c2N0am16cWpzZ21qaWdzaHdkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDQ0NjY5NDAsImV4cCI6MjAyMDA0Mjk0MH0.GQDzf4TK4mB_0cQDXXS9lABJ9IC5IqiYTALvZIWWs4E';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh6c2N0am16cWpzZ21qaWdzaHdkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcwNDQ2Njk0MCwiZXhwIjoyMDIwMDQyOTQwfQ.I-0fHaE-0xC-X3dxQVyXvqZrKyHEVnQGUPJLBaLFQOA';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh6c2N0am16cWpzZ21qaWdzaHdkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDQ0NjY5NDAsImV4cCI6MjAyMDA0Mjk0MH0.GQDzf4TK4mB_0cQDXXS9lABJ9IC5IqiYTALvZIWWs4E';
 
 // Создаем клиента Supabase
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true
+    }
+});
 
 // Инициализация базы данных
 async function initDatabase() {
     try {
+        // Проверяем авторизацию
+        const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+        if (authError) {
+            console.error('Ошибка авторизации:', authError);
+            return;
+        }
+
+        if (!user) {
+            console.log('Пользователь не авторизован');
+            return;
+        }
+
+        console.log('Текущий пользователь:', user);
+
         // Создаем или обновляем таблицу друзей
         const { error: friendsError } = await supabaseClient.rpc('init_friends_table');
         if (friendsError) {
@@ -85,6 +106,21 @@ async function createDatabaseFunctions() {
     }
 }
 
+// Функция для получения текущего пользователя
+async function getCurrentUser() {
+    try {
+        const { data: { user }, error } = await supabaseClient.auth.getUser();
+        if (error) {
+            console.error('Ошибка получения пользователя:', error);
+            return null;
+        }
+        return user;
+    } catch (error) {
+        console.error('Ошибка получения пользователя:', error);
+        return null;
+    }
+}
+
 // Инициализируем базу данных при загрузке
 document.addEventListener('DOMContentLoaded', async () => {
     await initDatabase();
@@ -151,3 +187,7 @@ function handleSupabaseError(error, message = 'Произошла ошибка')
     }
     return null;
 }
+
+// Экспортируем нужные функции и переменные
+window.supabaseClient = supabaseClient;
+window.getCurrentUser = getCurrentUser;
