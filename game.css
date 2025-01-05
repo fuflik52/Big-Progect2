@@ -1,0 +1,169 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #1a1a1a;
+    color: white;
+}
+
+.game-container {
+    max-width: 480px;
+    margin: 0 auto;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(180deg, #0a2815 0%, #051d0d 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.profile-header {
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.profile-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.profile-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+}
+
+#username {
+    font-weight: bold;
+}
+
+#rate {
+    color: #888;
+    font-size: 0.9em;
+}
+
+.balance {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: linear-gradient(90deg, #2ecc71 0%, #27ae60 100%);
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-weight: bold;
+}
+
+.coin-icon {
+    width: 20px;
+    height: 20px;
+}
+
+.energy-container {
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.energy-bar {
+    padding: 20px;
+    margin-bottom: 10px;
+}
+
+.energy-text {
+    color: #2ecc71;
+    text-align: center;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.energy-progress {
+    height: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.energy-fill {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, #2ecc71 0%, #27ae60 100%);
+    transition: width 0.3s;
+}
+
+.character-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.character-circle {
+    width: 200px;
+    height: 200px;
+    background: rgba(46, 204, 113, 0.2);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.character-circle:active {
+    transform: scale(0.95);
+}
+
+.character-image {
+    width: 80%;
+    height: 80%;
+    object-fit: contain;
+}
+
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    justify-content: space-around;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 10px;
+    backdrop-filter: blur(10px);
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: #888;
+    transition: color 0.3s;
+}
+
+.nav-icon {
+    width: 24px;
+    height: 24px;
+    margin-bottom: 5px;
+}
+
+.nav-item span {
+    font-size: 0.8em;
+}
+
+.nav-item.active {
+    color: #2ecc71;
+}
+
+.nav-item:hover {
+    color: #2ecc71;
+}

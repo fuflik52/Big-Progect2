@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Игра</title>
+    <link rel="stylesheet" href="game.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="game-container">
+        <div class="profile-header">
+            <div class="profile-info">
+                <img src="https://i.postimg.cc/vBBWGZjL/image.png" alt="Аватар" class="profile-avatar">
+                <span id="username">Загрузка...</span>
+                <span id="rate">10/hour</span>
+            </div>
+            <div class="balance">
+                <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="Coins" class="coin-icon">
+                <span id="balance-amount">0</span>
+            </div>
+        </div>
+
+        <div class="character-container">
+            <div class="character-circle">
+                <img src="https://i.postimg.cc/ZnggtH7v/image.png" alt="Персонаж" class="character-image">
+            </div>
+        </div>
+
+        <div class="energy-bar">
+            <div class="energy-text">
+                <span id="current-energy">100</span>/<span id="max-energy">100</span>
+            </div>
+            <div class="energy-progress">
+                <div class="energy-fill"></div>
+            </div>
+        </div>
+
+        <nav class="bottom-nav">
+            <a href="#" class="nav-item active" data-section="home">
+                <img src="https://i.postimg.cc/Y986QWcW/image.png" alt="Home" class="nav-icon">
+                <span>Home</span>
+            </a>
+            <a href="#" class="nav-item" data-section="frens">
+                <img src="https://i.postimg.cc/bYHMFCPx/image.png" alt="Frens" class="nav-icon">
+                <span>Frens</span>
+            </a>
+            <a href="#" class="nav-item" data-section="cards">
+                <img src="https://i.postimg.cc/T2C0DZG4/image.png" alt="Cards" class="nav-icon">
+                <span>Cards</span>
+            </a>
+            <a href="#" class="nav-item" data-section="mining">
+                <img src="https://i.postimg.cc/jd48ZLzZ/image.png" alt="Mining" class="nav-icon">
+                <span>Mining</span>
+            </a>
+            <a href="#" class="nav-item" data-section="reward">
+                <img src="https://i.postimg.cc/XY2s6m15/image.png" alt="Reward" class="nav-icon">
+                <span>Reward</span>
+            </a>
+        </nav>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>
