@@ -24,33 +24,29 @@ async function initGame() {
     
     try {
         // Проверяем существование профиля и создаем его при необходимости
-        const { data: existingProfile, error: checkError } = await supabaseClient
+        let { data: existingProfile, error: checkError } = await supabaseClient
             .from('profiles')
-            .select('*')
+            .select()
             .eq('username', currentUser.username)
-            .single();
+            .maybeSingle();
 
-        if (checkError && checkError.code === 'PGRST116') {
+        if (!existingProfile) {
             // Профиль не найден, создаем новый
             const { data: newProfile, error: createError } = await supabaseClient
                 .from('profiles')
-                .insert([
-                    {
-                        username: currentUser.username,
-                        user_password: currentUser.user_password,
-                        balance: 0,
-                        click_power: 1,
-                        total_clicks: 0
-                    }
-                ])
+                .insert({
+                    username: currentUser.username,
+                    user_password: currentUser.user_password,
+                    balance: 0,
+                    click_power: 1,
+                    total_clicks: 0
+                })
                 .select()
                 .single();
 
             if (createError) throw createError;
             currentUser = newProfile;
             localStorage.setItem('currentUser', JSON.stringify(currentUser));
-        } else if (checkError) {
-            throw checkError;
         } else {
             currentUser = existingProfile;
             localStorage.setItem('currentUser', JSON.stringify(currentUser));
@@ -81,11 +77,13 @@ async function handleClick() {
     try {
         const { error } = await supabaseClient
             .from('profiles')
-            .update({ 
+            .update({
                 balance: balance,
                 total_clicks: (currentUser.total_clicks || 0) + 1
             })
-            .eq('username', currentUser.username);
+            .eq('username', currentUser.username)
+            .select()
+            .single();
             
         if (error) throw error;
         
