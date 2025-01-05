@@ -82,7 +82,7 @@ async function updateFriendsList() {
                 console.log('Загрузка профиля для friend_id:', friendship.friend_id);
                 const { data: profile, error: profileError } = await supabaseClient
                     .from('profiles')
-                    .select('username')
+                    .select('username, balance')
                     .eq('id', friendship.friend_id)
                     .single();
 
@@ -94,7 +94,8 @@ async function updateFriendsList() {
                 console.log('Загруженный профиль:', profile);
                 return {
                     id: friendship.id,
-                    username: profile.username
+                    username: profile.username,
+                    balance: profile.balance || 0
                 };
             })
         );
@@ -108,7 +109,10 @@ async function updateFriendsList() {
             if (validProfiles.length > 0) {
                 friendListContent.innerHTML = validProfiles.map(friend => `
                     <div class="friend-item">
-                        <span class="friend-name">${friend.username}</span>
+                        <div class="friend-info">
+                            <span class="friend-name">${friend.username}</span>
+                            <span class="friend-balance">${friend.balance} токенов</span>
+                        </div>
                         <i class="fas fa-times friend-remove" onclick="removeFriend(${friend.id})"></i>
                     </div>
                 `).join('');

@@ -117,29 +117,61 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px;
+    padding: 15px;
     background: rgba(255, 255, 255, 0.05);
-    border-radius: 5px;
-    transition: background 0.3s;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
 }
 
 .friend-item:hover {
     background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateX(5px);
+}
+
+.friend-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex: 1;
+    margin-right: 15px;
 }
 
 .friend-name {
     font-size: 16px;
+    font-weight: 500;
+    color: #fff;
+}
+
+.friend-balance {
+    font-size: 14px;
+    color: #4CAF50;
+    background: rgba(76, 175, 80, 0.1);
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin-left: 10px;
 }
 
 .friend-remove {
     color: #ff4444;
     cursor: pointer;
-    padding: 5px;
-    transition: color 0.3s;
+    padding: 8px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
 }
 
 .friend-remove:hover {
     color: #ff0000;
+    background: rgba(255, 0, 0, 0.1);
+}
+
+.no-friends {
+    text-align: center;
+    padding: 20px;
+    color: rgba(255, 255, 255, 0.5);
+    font-style: italic;
 }
 
 .invite-icon {
