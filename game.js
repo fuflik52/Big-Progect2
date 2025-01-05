@@ -7,6 +7,9 @@ const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 let balance = 0;
 let clickPower = 1;
 let currentUser = null;
+let currentEnergy = 100;
+let maxEnergy = 100;
+let energyRegenInterval;
 
 // Инициализация игры
 async function initGame() {
@@ -39,7 +42,8 @@ async function initGame() {
                     user_password: currentUser.user_password,
                     balance: 0,
                     click_power: 1,
-                    total_clicks: 0
+                    total_clicks: 0,
+                    energy: maxEnergy
                 })
                 .select()
                 .single();
@@ -55,7 +59,12 @@ async function initGame() {
         // Устанавливаем значения из профиля
         balance = currentUser.balance || 0;
         clickPower = currentUser.click_power || 1;
+        currentEnergy = currentUser.energy || maxEnergy;
         updateBalance();
+        updateEnergy();
+        
+        // Запускаем регенерацию энергии
+        startEnergyRegeneration();
     } catch (error) {
         console.error('Ошибка загрузки баланса:', error);
     }
@@ -69,30 +78,79 @@ function updateBalance() {
     setTimeout(() => balanceElement.classList.remove('balance-increase'), 300);
 }
 
+// Обновление энергии
+function updateEnergy() {
+    const energyFill = document.getElementById('energyFill');
+    const currentEnergyElement = document.getElementById('currentEnergy');
+    const energyPercentage = (currentEnergy / maxEnergy) * 100;
+    
+    energyFill.style.width = `${energyPercentage}%`;
+    currentEnergyElement.textContent = Math.floor(currentEnergy);
+    
+    // Добавляем или убираем класс low-energy
+    if (energyPercentage <= 20) {
+        energyFill.classList.add('energy-low');
+    } else {
+        energyFill.classList.remove('energy-low');
+    }
+}
+
+// Регенерация энергии
+function startEnergyRegeneration() {
+    // Очищаем предыдущий интервал, если он существует
+    if (energyRegenInterval) {
+        clearInterval(energyRegenInterval);
+    }
+    
+    // Регенерация энергии каждые 3 секунды
+    energyRegenInterval = setInterval(() => {
+        if (currentEnergy < maxEnergy) {
+            currentEnergy = Math.min(maxEnergy, currentEnergy + 1);
+            updateEnergy();
+            
+            // Сохраняем значение энергии в базе данных
+            supabaseClient
+                .from('profiles')
+                .update({ energy: currentEnergy })
+                .eq('username', currentUser.username);
+        }
+    }, 3000);
+}
+
 // Обработка клика
 async function handleClick() {
+    // Проверяем, есть ли энергия
+    if (currentEnergy < 1) {
+        return;
+    }
+    
+    // Уменьшаем энергию и увеличиваем баланс
+    currentEnergy--;
     balance += clickPower;
+    
+    // Обновляем интерфейс
     updateBalance();
+    updateEnergy();
     
     try {
         const { error } = await supabaseClient
             .from('profiles')
             .update({
                 balance: balance,
+                energy: currentEnergy,
                 total_clicks: (currentUser.total_clicks || 0) + 1
             })
-            .eq('username', currentUser.username)
-            .select()
-            .single();
+            .eq('username', currentUser.username);
             
         if (error) throw error;
         
         // Обновляем данные в localStorage
         currentUser.balance = balance;
+        currentUser.energy = currentEnergy;
         currentUser.total_clicks = (currentUser.total_clicks || 0) + 1;
         localStorage.setItem('currentUser', JSON.stringify(currentUser));
     } catch (error) {
-        console.error('Ошибка сохранения баланса:', error);
+        console.error('Ошибка сохранения данных:', error);
     }
 }
 
@@ -128,6 +186,13 @@ document.addEventListener('DOMContentLoaded', () => {
             switchSection(section);
         });
     });
+});
+
+// Очистка интервала при уходе со страницы
+window.addEventListener('beforeunload', () => {
+    if (energyRegenInterval) {
+        clearInterval(energyRegenInterval);
+    }
 });
 
 // Обновляем app.js, чтобы после успешного входа перенаправлять на game.html

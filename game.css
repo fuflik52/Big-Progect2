@@ -170,6 +170,66 @@ body {
     opacity: 1;
 }
 
+.energy-bar {
+    background: #1e262000;
+    margin: 0 10px;
+    padding: 10px 15px;
+    border-radius: 15px;
+    display: flex
+;
+    align-items: center;
+    gap: 10px;
+    position: fixed;
+    bottom: 80px;
+    left: 0;
+    right: 0;
+    max-width: 460px;
+    margin-left: auto;
+    margin-right: auto;
+    z-index: 100;
+}
+
+.energy-icon img {
+    width: 24px;
+    height: 24px;
+}
+
+.energy-progress {
+    flex: 1;
+    height: 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+}
+
+.energy-fill {
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(90deg, #4CAF50 0%, #81C784 100%);
+    border-radius: 6px;
+    transition: width 0.3s ease;
+}
+
+.energy-text {
+    color: white;
+    font-size: 14px;
+    min-width: 60px;
+    text-align: right;
+}
+
+/* Анимации для энергии */
+@keyframes energyPulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
+.energy-low {
+    animation: energyPulse 1s infinite;
+    background: linear-gradient(90deg, #f44336 0%, #ef5350 100%);
+}
+
 /* Анимации */
 @keyframes pulse {
     0% { transform: scale(1); }
