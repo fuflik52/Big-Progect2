@@ -44,17 +44,14 @@ async function updateFriendsList() {
     const user = getCurrentUser();
     if (!user) return;
 
-    const friendListElement = document.querySelector('.friend-list-content');
-    if (!friendListElement) return;
-
     try {
+        // Получаем список друзей с их именами
         const { data: friends, error } = await supabaseClient
             .from('user_friends')
             .select(`
-                friend:profiles!user_friends_friend_id_fkey(
-                    username,
-                    balance,
-                    total_clicks
+                id,
+                friend:friend_id (
+                    username
                 )
             `)
             .eq('user_id', user.id);
@@ -65,32 +62,43 @@ async function updateFriendsList() {
         }
 
         // Обновляем счетчик друзей
-        const friendCountElement = document.querySelector('.friend-list-header');
-        if (friendCountElement) {
-            friendCountElement.textContent = `Список друзей (${friends ? friends.length : 0})`;
+        const friendListHeader = document.querySelector('.friend-list-header');
+        if (friendListHeader) {
+            friendListHeader.textContent = `Список друзей (${friends.length})`;
         }
 
-        // Очищаем и обновляем список друзей
-        friendListElement.innerHTML = '';
-        if (friends && friends.length > 0) {
-            friends.forEach(({ friend }) => {
-                const friendElement = document.createElement('div');
-                friendElement.className = 'friend-item';
-                friendElement.innerHTML = `
-                    <div class="friend-info">
-                        <div class="friend-name">${friend.username}</div>
-                        <div class="friend-stats">
-                            Баланс: ${friend.balance} | Всего кликов: ${friend.total_clicks}
-                        </div>
-                    </div>
-                `;
-                friendListElement.appendChild(friendElement);
-            });
-        } else {
-            friendListElement.innerHTML = '<div class="no-friends">У вас пока нет друзей</div>';
+        // Обновляем список друзей
+        const friendListContent = document.querySelector('.friend-list-content');
+        if (friendListContent) {
+            friendListContent.innerHTML = friends.map(friend => `
+                <div class="friend-item">
+                    <span class="friend-name">${friend.friend.username}</span>
+                    <i class="fas fa-times friend-remove" onclick="removeFriend(${friend.id})"></i>
+                </div>
+            `).join('');
         }
     } catch (error) {
-        handleSupabaseError(error, 'Ошибка обновления списка друзей');
+        handleSupabaseError(error, 'Ошибка загрузки списка друзей');
+    }
+}
+
+// Удаление друга
+async function removeFriend(friendshipId) {
+    try {
+        const { error } = await supabaseClient
+            .from('user_friends')
+            .delete()
+            .eq('id', friendshipId);
+
+        if (error) {
+            handleSupabaseError(error, 'Ошибка удаления друга');
+            return;
+        }
+
+        showNotification('Друг удален из списка');
+        await updateFriendsList();
+    } catch (error) {
+        handleSupabaseError(error, 'Ошибка удаления друга');
     }
 }
 
@@ -210,3 +218,101 @@ document.addEventListener('DOMContentLoaded', () => {
     initFrens();
     handleReferral();
 });
+
+// Инициализация списка друзей
+async function initFriends() {
+    const user = getCurrentUser();
+    if (!user) return;
+
+    // Отображаем имя пользователя
+    const usernameElement = document.getElementById('yourUsername');
+    if (usernameElement) {
+        usernameElement.textContent = user.username;
+    }
+
+    // Загружаем список друзей
+    await updateFriendsList();
+}
+
+// Добавление друга по имени
+async function addFriend() {
+    const user = getCurrentUser();
+    if (!user) return;
+
+    const friendUsernameInput = document.getElementById('friendUsername');
+    const friendUsername = friendUsernameInput.value.trim();
+
+    if (!friendUsername) {
+        showNotification('Введите имя друга', true);
+        return;
+    }
+
+    if (friendUsername === user.username) {
+        showNotification('Вы не можете добавить себя в друзья', true);
+        return;
+    }
+
+    try {
+        // Проверяем существование пользователя
+        const { data: friendUser, error: userError } = await supabaseClient
+            .from('profiles')
+            .select('id')
+            .eq('username', friendUsername)
+            .single();
+
+        if (userError || !friendUser) {
+            showNotification('Пользователь не найден', true);
+            return;
+        }
+
+        // Проверяем, не является ли уже другом
+        const { data: existingFriends, error: checkError } = await supabaseClient
+            .from('user_friends')
+            .select('id')
+            .eq('user_id', user.id)
+            .eq('friend_id', friendUser.id);
+
+        if (checkError) {
+            handleSupabaseError(checkError, 'Ошибка проверки дружбы');
+            return;
+        }
+
+        if (existingFriends && existingFriends.length > 0) {
+            showNotification('Этот пользователь уже в списке друзей', true);
+            return;
+        }
+
+        // Добавляем друга
+        const { error: addError } = await supabaseClient
+            .from('user_friends')
+            .insert([
+                {
+                    user_id: user.id,
+                    friend_id: friendUser.id
+                }
+            ]);
+
+        if (addError) {
+            handleSupabaseError(addError, 'Ошибка добавления друга');
+            return;
+        }
+
+        // Очищаем поле ввода и обновляем список
+        friendUsernameInput.value = '';
+        showNotification('Друг успешно добавлен!');
+        await updateFriendsList();
+
+    } catch (error) {
+        handleSupabaseError(error, 'Ошибка добавления друга');
+    }
+}
+
+// Копирование имени пользователя
+function copyUsername() {
+    const user = getCurrentUser();
+    if (!user) return;
+
+    navigator.clipboard.writeText(user.username)
+        .then(() => showNotification('Имя пользователя скопировано'))
+        .catch(() => showNotification('Ошибка копирования', true));
+}

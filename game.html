@@ -93,13 +93,17 @@
                         <p>Вы и ваши друзья получите бонусы.</p>
                     </div>
                     
+                    <div class="your-username">
+                        <p>Ваше имя: <span id="yourUsername"></span></p>
+                        <button onclick="copyUsername()" class="copy-username-button">
+                            <i class="fas fa-copy"></i> Копировать
+                        </button>
+                    </div>
+
                     <div class="invite-section">
-                        <div class="invite-icon">
-                            <i class="fas fa-user-plus"></i>
-                        </div>
-                        <div class="invite-text">
-                            <h3>Пригласи друга!</h3>
-                            <p>+10% от добытых токенов пользователя.</p>
+                        <div class="invite-form">
+                            <input type="text" id="friendUsername" placeholder="Введите имя друга">
+                            <button onclick="addFriend()" class="add-friend-button">Добавить друга</button>
                         </div>
                     </div>
 
@@ -113,13 +117,6 @@
                         <div class="friend-list-content">
                             <!-- Здесь будет список друзей -->
                         </div>
-                    </div>
-
-                    <div class="copy-link-container">
-                        <button class="copy-link-button" onclick="copyReferralLink()">Скопировать ссылку</button>
-                        <button class="share-button" onclick="navigator.share({title: 'Присоединяйся к игре!', url: window.location.href})">
-                            <i class="fas fa-share-alt"></i>
-                        </button>
                     </div>
                 </div>
             </div>
