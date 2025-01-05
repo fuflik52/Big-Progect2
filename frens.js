@@ -102,16 +102,23 @@ function copyReferralLink() {
         .catch(() => showNotification('Ошибка копирования ссылки', true));
 }
 
-// Обработка реферальной ссылки при входе
+// Обработка реферальной ссылки
 async function handleReferral() {
     const urlParams = new URLSearchParams(window.location.search);
     const refCode = urlParams.get('ref');
+    const user = getCurrentUser();
     
-    if (!refCode || !getCurrentUser()) return;
+    if (!refCode || !user) return;
 
     try {
         // Декодируем ID пригласившего пользователя
         const referrerId = atob(refCode);
+
+        // Проверяем, не пытается ли пользователь добавить сам себя
+        if (referrerId === user.id) {
+            showNotification('Вы не можете добавить себя в друзья');
+            return;
+        }
         
         // Проверяем, существует ли уже такая дружба
         const { data: existingFriend, error: checkError } = await supabaseClient
@@ -119,12 +126,13 @@ async function handleReferral() {
             .select('id')
             .match({
                 user_id: referrerId,
-                friend_id: getCurrentUser().id
+                friend_id: user.id
             })
             .single();
 
         if (checkError && checkError.code !== 'PGRST116') {
-            throw checkError;
+            handleSupabaseError(checkError, 'Ошибка проверки дружбы');
+            return;
         }
 
         if (existingFriend) {
@@ -138,24 +146,35 @@ async function handleReferral() {
             .insert([
                 {
                     user_id: referrerId,
-                    friend_id: getCurrentUser().id
+                    friend_id: user.id
                 }
             ]);
 
-        if (createError) throw createError;
+        if (createError) {
+            handleSupabaseError(createError, 'Ошибка добавления в друзья');
+            return;
+        }
 
-        showNotification('Вы успешно добавлены в список друзей!');
-        
-        // Добавляем бонус пригласившему
+        // Начисляем бонус пригласившему
         const { error: updateError } = await supabaseClient
             .from('profiles')
             .update({
-                balance: supabase.sql`balance + ${Math.floor(getCurrentUser().balance * 0.1)}`
+                balance: supabase.sql`balance + ${Math.floor(user.balance * 0.1)}`
             })
             .eq('id', referrerId);
 
-        if (updateError) throw updateError;
+        if (updateError) {
+            handleSupabaseError(updateError, 'Ошибка начисления бонуса');
+            return;
+        }
 
+        showNotification('Вы успешно добавлены в список друзей!');
+        
+        // Обновляем список друзей
+        updateFriendsList();
+        
+        // Удаляем параметр ref из URL
+        window.history.replaceState({}, document.title, window.location.pathname);
     } catch (error) {
         handleSupabaseError(error, 'Ошибка обработки реферальной ссылки');
     }

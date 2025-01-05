@@ -7,11 +7,37 @@ const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 let currentUser = null;
 
 // Функции для работы с пользователем
-function getCurrentUser() {
+async function getCurrentUser() {
     if (!currentUser) {
+        // Пробуем получить данные из localStorage
         const userData = localStorage.getItem('currentUser');
-        if (userData) {
+        const sessionData = localStorage.getItem('supabase.auth.token');
+
+        if (userData && sessionData) {
             currentUser = JSON.parse(userData);
+            
+            // Проверяем актуальность данных
+            try {
+                const { data: profile, error } = await supabaseClient
+                    .from('profiles')
+                    .select('*')
+                    .eq('username', currentUser.username)
+                    .single();
+
+                if (error) {
+                    throw error;
+                }
+
+                if (profile) {
+                    currentUser = profile;
+                    localStorage.setItem('currentUser', JSON.stringify(profile));
+                }
+            } catch (error) {
+                console.error('Ошибка обновления данных пользователя:', error);
+                localStorage.removeItem('currentUser');
+                localStorage.removeItem('supabase.auth.token');
+                currentUser = null;
+            }
         }
     }
     return currentUser;
@@ -23,5 +49,18 @@ function setCurrentUser(user) {
         localStorage.setItem('currentUser', JSON.stringify(user));
     } else {
         localStorage.removeItem('currentUser');
+        localStorage.removeItem('supabase.auth.token');
     }
+}
+
+// Функция для обработки ошибок Supabase
+function handleSupabaseError(error, message = 'Произошла ошибка') {
+    console.error(message + ':', error);
+    if (error.message === 'Invalid API key' || error.message.includes('JWT')) {
+        // Если проблема с авторизацией, перенаправляем на страницу входа
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem('supabase.auth.token');
+        window.location.href = 'index.html';
+    }
+    return null;
 }

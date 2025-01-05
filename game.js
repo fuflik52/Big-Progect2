@@ -12,16 +12,19 @@ async function initGame() {
         window.location.href = 'index.html';
         return;
     }
-    
-    // Устанавливаем имя пользователя
-    document.getElementById('username').textContent = user.username;
-    
+
+    // Устанавливаем имя пользователя и другие элементы интерфейса
+    const usernameElement = document.getElementById('username');
+    if (usernameElement) {
+        usernameElement.textContent = user.username;
+    }
+
     try {
         // Получаем актуальные данные из базы
         const { data: profile, error } = await supabaseClient
             .from('profiles')
             .select('*')
-            .eq('username', user.username)
+            .eq('id', user.id)
             .single();
 
         if (error) {
@@ -50,11 +53,10 @@ async function initGame() {
 
 // Обновление баланса
 function updateBalance() {
+    const user = getCurrentUser();
     const balanceElement = document.getElementById('balance');
-    if (currentUser && balanceElement) {
-        balanceElement.textContent = currentUser.balance || 0;
-        balanceElement.classList.add('balance-increase');
-        setTimeout(() => balanceElement.classList.remove('balance-increase'), 300);
+    if (balanceElement && user) {
+        balanceElement.textContent = user.balance;
     }
 }
 
@@ -62,11 +64,17 @@ function updateBalance() {
 function updateEnergy() {
     const energyFill = document.getElementById('energyFill');
     const currentEnergyElement = document.getElementById('currentEnergy');
-    const energyPercentage = (currentEnergy / maxEnergy) * 100;
+    const maxEnergyElement = document.getElementById('maxEnergy');
     
+    if (!energyFill || !currentEnergyElement || !maxEnergyElement) {
+        return;
+    }
+
+    const energyPercentage = (currentEnergy / maxEnergy) * 100;
     energyFill.style.width = `${energyPercentage}%`;
     currentEnergyElement.textContent = Math.floor(currentEnergy);
-    
+    maxEnergyElement.textContent = maxEnergy;
+
     // Добавляем или убираем класс low-energy
     if (energyPercentage <= 20) {
         energyFill.classList.add('energy-low');
@@ -75,57 +83,51 @@ function updateEnergy() {
     }
 }
 
-// Регенерация энергии
+// Старт регенерации энергии
 function startEnergyRegeneration() {
+    // Останавливаем предыдущий интервал, если он был
     if (energyRegenInterval) {
         clearInterval(energyRegenInterval);
     }
 
-    async function updateEnergyInDB() {
-        if (isUpdatingEnergy || currentEnergy >= maxEnergy) return;
-        
+    // Запускаем новый интервал
+    energyRegenInterval = setInterval(async () => {
+        if (isUpdatingEnergy || currentEnergy >= maxEnergy) {
+            return;
+        }
+
         try {
             isUpdatingEnergy = true;
-            
-            // Получаем актуальные данные из базы
-            const { data: currentData, error: fetchError } = await supabaseClient
-                .from('profiles')
-                .select('energy, last_energy_update')
-                .eq('username', currentUser.username)
-                .single();
 
-            if (fetchError) {
-                handleSupabaseError(fetchError, 'Ошибка обновления энергии');
+            const user = getCurrentUser();
+            if (!user) {
+                clearInterval(energyRegenInterval);
                 return;
             }
 
-            // Вычисляем, сколько энергии должно быть добавлено
-            const timePassed = Math.floor((Date.now() - lastEnergyUpdate) / 1000);
-            const energyToAdd = Math.min(timePassed, maxEnergy - currentEnergy);
-            const newEnergy = Math.min(maxEnergy, currentEnergy + energyToAdd);
+            // Добавляем 1 энергию каждую секунду
+            const newEnergy = Math.min(maxEnergy, currentEnergy + 1);
 
-            if (newEnergy > currentData.energy) {
-                // Обновляем значение в базе данных
-                const { data, error } = await supabaseClient
-                    .from('profiles')
-                    .update({
-                        energy: newEnergy,
-                        last_energy_update: new Date().toISOString()
-                    })
-                    .eq('username', currentUser.username)
-                    .select()
-                    .single();
+            // Обновляем энергию в базе данных
+            const { data, error } = await supabaseClient
+                .from('profiles')
+                .update({
+                    energy: newEnergy,
+                    last_energy_update: new Date().toISOString()
+                })
+                .eq('id', user.id)
+                .select()
+                .single();
 
-                if (error) {
-                    handleSupabaseError(error, 'Ошибка обновления энергии');
-                    return;
-                }
+            if (error) {
+                handleSupabaseError(error, 'Ошибка обновления энергии');
+                return;
+            }
 
-                if (data) {
-                    setCurrentUser({ ...currentUser, ...data });
-                    currentEnergy = data.energy;
-                    updateEnergy();
-                }
+            if (data) {
+                setCurrentUser({ ...user, ...data });
+                currentEnergy = data.energy;
+                updateEnergy();
             }
 
             lastEnergyUpdate = Date.now();
@@ -134,101 +136,57 @@ function startEnergyRegeneration() {
         } finally {
             isUpdatingEnergy = false;
         }
-    }
-
-    // Обновляем энергию каждую секунду
-    energyRegenInterval = setInterval(() => {
-        if (currentEnergy < maxEnergy) {
-            // Обновляем локальное значение
-            currentEnergy = Math.min(maxEnergy, currentEnergy + 1);
-            updateEnergy();
-            // Синхронизируем с базой данных
-            updateEnergyInDB();
-        }
-    }, 1000);
-
-    // Начальная синхронизация
-    updateEnergyInDB();
-}
-
-// Функция для принудительной синхронизации энергии
-async function syncEnergy() {
-    try {
-        const { data, error } = await supabaseClient
-            .from('profiles')
-            .select('energy, last_energy_update')
-            .eq('username', currentUser.username)
-            .single();
-
-        if (error) {
-            handleSupabaseError(error, 'Ошибка синхронизации энергии');
-            return;
-        }
-
-        if (data) {
-            currentEnergy = data.energy;
-            lastEnergyUpdate = new Date(data.last_energy_update).getTime();
-            updateEnergy();
-        }
-    } catch (error) {
-        handleSupabaseError(error, 'Ошибка синхронизации энергии');
-    }
+    }, 1000); // Интервал в 1 секунду
 }
 
 // Обработка клика
 async function handleClick() {
-    if (!currentUser || currentEnergy < 1) return;
+    const user = getCurrentUser();
+    if (!user || currentEnergy <= 0) return;
 
     try {
-        const clickPower = currentUser.click_power || 1;
-        const newBalance = (currentUser.balance || 0) + clickPower;
-        const newEnergy = Math.max(0, currentEnergy - 1);
-        const newTotalClicks = (currentUser.total_clicks || 0) + 1;
-
-        // Сначала обновляем локальные данные и интерфейс
-        currentUser.balance = newBalance;
-        currentUser.total_clicks = newTotalClicks;
-        currentEnergy = newEnergy;
-        
-        // Обновляем интерфейс немедленно
-        updateBalance();
+        // Уменьшаем энергию
+        currentEnergy = Math.floor(Math.max(0, currentEnergy - 1));
         updateEnergy();
 
-        // Затем отправляем данные в базу
+        // Обновляем баланс в базе данных
         const { data, error } = await supabaseClient
             .from('profiles')
             .update({
-                balance: newBalance,
-                energy: newEnergy,
-                last_energy_update: new Date().toISOString(),
-                total_clicks: newTotalClicks
+                balance: user.balance + 1,
+                energy: currentEnergy,
+                last_energy_update: new Date().toISOString()
             })
-            .eq('username', currentUser.username)
+            .eq('id', user.id)
             .select()
             .single();
-            
+
         if (error) {
-            handleSupabaseError(error, 'Ошибка сохранения данных');
-            // Откатываем изменения при ошибке
-            currentUser.balance = data ? data.balance : currentUser.balance - clickPower;
-            currentUser.total_clicks = data ? data.total_clicks : currentUser.total_clicks - 1;
-            currentEnergy = data ? data.energy : currentEnergy + 1;
-            updateBalance();
-            updateEnergy();
-            throw error;
+            handleSupabaseError(error, 'Ошибка обновления баланса');
+            return;
         }
 
-        // Обновляем данные из базы
         if (data) {
-            setCurrentUser({ ...currentUser, ...data });
-            currentEnergy = data.energy;
+            // Обновляем данные пользователя
+            setCurrentUser({ ...user, ...data });
+            
+            // Анимация увеличения баланса
+            const balanceElement = document.getElementById('balance');
+            if (balanceElement) {
+                balanceElement.textContent = data.balance;
+                balanceElement.classList.add('balance-increase');
+                setTimeout(() => balanceElement.classList.remove('balance-increase'), 300);
+            }
+
+            // Анимация клика
+            const clickerButton = document.getElementById('clickerButton');
+            if (clickerButton) {
+                clickerButton.classList.add('clicked');
+                setTimeout(() => clickerButton.classList.remove('clicked'), 100);
+            }
         }
-        
-        // Сохраняем в localStorage
-        currentUser.last_energy_update = new Date().toISOString();
-        localStorage.setItem('currentUser', JSON.stringify(currentUser));
     } catch (error) {
-        handleSupabaseError(error, 'Ошибка сохранения данных');
+        handleSupabaseError(error, 'Ошибка обработки клика');
     }
 }
 
@@ -254,38 +212,43 @@ function switchSection(sectionId) {
     document.querySelectorAll('.nav-item').forEach(item => {
         item.classList.remove('active');
     });
-    document.querySelector(`[data-section="${sectionId}"]`).classList.add('active');
+    const navItem = document.querySelector(`[data-section="${sectionId}"]`);
+    if (navItem) {
+        navItem.classList.add('active');
+    }
 }
 
 // Обработчики событий
 document.addEventListener('DOMContentLoaded', () => {
+    // Инициализация игры
     initGame();
-    
-    // Клик по кнопке
-    document.getElementById('clickerButton').addEventListener('click', handleClick);
-    
-    // Клик по аватару для открытия настроек
-    document.getElementById('userAvatar').addEventListener('click', toggleSettings);
-    
-    // Загружаем сохраненные настройки
-    loadSettings();
-    
-    // Навигация
-    document.querySelectorAll('.nav-item').forEach(item => {
-        item.addEventListener('click', (e) => {
-            e.preventDefault();
-            const section = item.getAttribute('data-section');
-            switchSection(section);
-        });
+
+    // Обработчик клика по кнопке
+    const clickerButton = document.getElementById('clickerButton');
+    if (clickerButton) {
+        clickerButton.addEventListener('click', handleClick);
+    }
+
+    // Обработчик клика по аватару для настроек
+    const userAvatar = document.getElementById('userAvatar');
+    if (userAvatar) {
+        userAvatar.addEventListener('click', toggleSettings);
+    }
+
+    // Обработчики навигации
+    const navItems = document.querySelectorAll('.nav-item');
+    navItems.forEach(item => {
+        if (item.dataset.section) {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                switchSection(item.dataset.section);
+            });
+        }
     });
-    
-    // Запускаем снег сразу после загрузки страницы
-    snowfall.start();
-    
-    // Обработка видимости вкладки
+
+    // Настройка видимости документа
     document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') {
-            // При возврате на вкладку синхронизируем данные
+        if (!document.hidden) {
             syncEnergy();
         }
     });
@@ -423,4 +386,31 @@ function updateFriendsList() {
 function handleSupabaseError(error, message) {
     console.error(message, error);
     showNotification(message, true);
+}
+
+// Функция для синхронизации энергии
+async function syncEnergy() {
+    try {
+        const user = getCurrentUser();
+        if (!user) return;
+
+        const { data, error } = await supabaseClient
+            .from('profiles')
+            .select('energy, last_energy_update')
+            .eq('id', user.id)
+            .single();
+
+        if (error) {
+            handleSupabaseError(error, 'Ошибка синхронизации энергии');
+            return;
+        }
+
+        if (data) {
+            currentEnergy = data.energy;
+            lastEnergyUpdate = new Date(data.last_energy_update).getTime();
+            updateEnergy();
+        }
+    } catch (error) {
+        handleSupabaseError(error, 'Ошибка синхронизации энергии');
+    }
 }
