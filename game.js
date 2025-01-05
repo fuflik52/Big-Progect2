@@ -1,10 +1,3 @@
-// Инициализация Supabase
-const { createClient } = supabase;
-window.supabaseClient = createClient(
-    'https://hzsctjmzqjsgmjigshwd.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh6c2N0am16cWpzZ21qaWdzaHdkIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NzU3NjQwNTYsImV4cCI6MjA1MTYxNDUxNn0.OVBvyWchb8yAi-xDAl5PTVks2YUD7DsYN3cVW-Gjuh4'
-);
-
 // Элементы интерфейса
 const characterCircle = document.querySelector('.character-circle');
 const balanceAmount = document.getElementById('balance-amount');
@@ -46,6 +39,9 @@ async function loadUserData() {
         }
     } catch (error) {
         console.error('Ошибка загрузки данных:', error);
+        if (error.message === 'Invalid API key') {
+            window.location.href = 'index.html';
+        }
     }
 }
 
